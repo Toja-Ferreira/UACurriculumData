@@ -142,7 +142,7 @@ with tab2:
         filtered_display_data = filtered_data.drop(columns=['DEPARTMENT'])
 
         # Drop the Url column from the filtered data
-        #filtered_display_data = filtered_data.drop(columns=['Url'])
+        filtered_display_data = filtered_display_data.drop(columns=['Url'])
 
         # Sort the DataFrame by the CODDISCIPLINA column
         filtered_display_data = filtered_display_data.sort_values(by='CODDISCIPLINACOD')
