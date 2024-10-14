@@ -3,7 +3,6 @@ import streamlit as st
 import plotly.express as px
 import matplotlib.pyplot as plt
 from matplotlib_venn import venn3
-import plotly.graph_objects as go
 
 plt.rcParams['font.family'] = 'serif'
 
@@ -28,9 +27,6 @@ if 'uc_data' not in st.session_state:
 
 # Ensure CODDISCIPLINACOD is treated as a string to avoid commas in the display
 st.session_state.uc_data['CODDISCIPLINACOD'] = uc_data['CODDISCIPLINACOD'].astype(str)
-
-# Convert CODIGOMICROCREDENCIAL to string and format it
-st.session_state.uc_data['CODIGOMICROCREDENCIAL'] = uc_data['CODIGOMICROCREDENCIAL'].apply(lambda x: f"{int(x)}" if pd.notnull(x) else "")
 
 # Streamlit app layout
 st.title("University Curriculum Data Dashboard")
@@ -65,12 +61,15 @@ with tab1:
     col1, col2, col3 = st.columns([1, 3, 1])
     
     with col2:
+        sets = [msc_disciplines, ce_disciplines, micro_disciplines]
+        labels = ['MsC' if len(msc_disciplines) > 0 else '',
+                  'CE' if len(ce_disciplines) > 0 else '',
+                  'μC' if len(micro_disciplines) > 0 else '']
         fig, ax = plt.subplots(figsize=(6, 6))  # Keep a reasonable size for Venn diagram
         # Add title to the Venn diagram
         ax.set_title('Disciplines of UA', fontsize=16)
-        venn = venn3([msc_disciplines, ce_disciplines, micro_disciplines], ('MsC', 'CE', 'μC'))
+        venn = venn3(subsets=sets, set_labels=labels)
 
-        # Update labels as needed
         if venn.get_label_by_id('100'):
             venn.get_label_by_id('100').set_text(f'{len(msc_disciplines - ce_disciplines - micro_disciplines)}')
         if venn.get_label_by_id('010'):
@@ -169,10 +168,10 @@ with tab2:
 
         # Display department-specific counts with formatted text
         st.write(f"### Summary of Programs in {department_filter}:")
-        st.write(f"- **{msc_courses_count}** Master programs (MsC) with **{msc_disciplines_count}** disciplines.")
         
         # List all Master Programs in an expander
         if msc_courses_count > 0:
+            st.write(f"- **{msc_courses_count}** Master programs (MsC) with **{msc_disciplines_count}** disciplines.")
             with st.expander("List of MsC Programs"):
                 for program in msc_courses:
                     parts = program.split('_')
@@ -188,11 +187,10 @@ with tab2:
                         st.write(f"**{program_code}** {program_name} (**Branches**: {branches_str})")  # Display program code and name with branches
                     else:
                         st.write(f"**{program_code}** {program_name}")  # No branches
-
-        st.write(f"- **{ce_courses_count}** Especialization programs (CE) with **{ce_disciplines_count}** disciplines.")
         
         # List all CE programs in an expander
         if ce_courses_count > 0:
+            st.write(f"- **{ce_courses_count}** Especialization programs (CE) with **{ce_disciplines_count}** disciplines.")
             with st.expander("List of CE Programs"):
                 for program in ce_courses:
                     parts = program.split('_')
@@ -200,17 +198,15 @@ with tab2:
                     program_name = parts[1].upper()
                     st.write(f"**{program_code}** {program_name}")
 
-        st.write(f"- **{micro_courses_count}** Microcredentials (μC).")
-
         # List all Microcredential programs in an expander
         if micro_courses_count > 0:
+            st.write(f"- **{micro_courses_count}** Microcredentials (μC).")
             with st.expander("List of μC Programs"):
                 for program in micro_courses:
-                    # Get the corresponding microcredential code from the DataFrame
-                    code = int(filtered_data[filtered_data['Microcredencial'] == program]['CODIGOMICROCREDENCIAL'].values[0])
-                    # Get the corresponding name from the DataFrame (assuming it's in the same row)
-                    name = filtered_data[filtered_data['Microcredencial']  == program]['NOMEDISCIPLINA'].values[0].upper()  # Adjust if necessary
-                    st.write(f"**{code}** {name}")
+                    parts = program.split('_')
+                    program_code = parts[0].strip()
+                    program_name = parts[1].strip().upper()
+                    st.write(f"**{program_code}** {program_name}")
 
         # Create a bar chart for unique disciplines
         chart_data = pd.DataFrame({
@@ -298,7 +294,6 @@ with tab2:
             col1, col2, col3 = st.columns([1, 2, 1])  # Create columns with different width ratios
 
             with col2:
-                # Safely set labels by checking if they exist first
                 if venn.get_label_by_id('100'):
                     venn.get_label_by_id('100').set_text(f'{len(overlapping_msc_only)}')
                 if venn.get_label_by_id('010'):
@@ -430,11 +425,12 @@ with tab2:
                 # Expander for Microcredentials
                 if programs['μC']:
                     with st.expander(f"μC Programs:"):
-                        for microcred in programs['μC']:
-                            # Extract the microcredential name from the column
-                            microcred_code = int(filtered_data[filtered_data['Microcredencial'] == microcred]['CODIGOMICROCREDENCIAL'].values[0])
-                            microcred_name = filtered_data[filtered_data['Microcredencial'] == microcred]['NOMEDISCIPLINA'].values[0]
-                            st.write(f"- **{microcred_code} -** {microcred_name}")
+                        for program in programs['μC']:
+                            micro_program = filtered_data[filtered_data['Microcredencial'] == program]['Microcredencial'].values[0]
+                            parts = micro_program.split('_')
+                            program_code = parts[0]
+                            program_name = parts[1].upper()
+                            st.write(f"- **{program_code} -** {program_name}")
 
                 # Expander for CE Programs
                 if programs['CE']:
@@ -535,25 +531,27 @@ with tab3:
             with st.expander("CE List"):
                 for index, row in ce_grouped.iterrows():
                     parts = row['CE'].split('_')
-                    ce_code = parts[0]
-                    ce_name = parts[1].upper()
+                    program_code = parts[0]
+                    program_name = parts[1].upper()
 
-                    st.write(f"- **{ce_code} -** {ce_name}")
+                    st.write(f"- **{program_code} -** {program_name}")
 
         # 3. Microcredentials
         if selected_discipline_data['Microcredencial'].notna().any():
             micro_courses = selected_discipline_data[selected_discipline_data['Microcredencial'].notna()]
             # Group by the CE code (program) and aggregate branches
-            micro_grouped = ce_courses.groupby('CODIGOMICROCREDENCIAL').apply(
+            micro_grouped = ce_courses.groupby('Microcredencial').apply(
                 lambda x: ', '.join(sorted(set(str(i).replace('_', ' ').upper() for i in x if pd.notna(i))))  # Uppercase and remove underscores
             ).reset_index()
 
             st.markdown(f"### {len(micro_grouped)} Microcredential Programs (μC)")
             with st.expander("μC List"):
                 for index, course in micro_courses.iterrows():
-                    microcred_code = int(course['CODIGOMICROCREDENCIAL'])
-                    microcred_name = course['NOMEDISCIPLINA']
-                    st.write(f"- **{microcred_code} -** {microcred_name}")
+                    parts = row['Microcredencial'].split('_')
+                    program_code = parts[0]
+                    program_name = parts[1].upper()
+
+                    st.write(f"- **{program_code} -** {program_name}")
 
 # Upload Data Tab
 with tab4:

@@ -108,8 +108,14 @@ def load_microcredentials(file_path):
     print("Original DataFrame:")
     print(df.head())
 
-    # Add a new column 'Nome_UC' that is the same as 'Microcredencial'
+    # Add a new column 'NOMEDISCIPLINA' that is the same as the new 'Microcredencial'
     df['NOMEDISCIPLINA'] = df['Microcredencial']
+
+    # Create the 'NOMEDISCIPLINA' column by concatenating 'CODIGOMICROCREDENCIAL' and 'NOMEDISCIPLINA'
+    df['Microcredencial'] = df.apply(lambda x: f"{x['CODIGOMICROCREDENCIAL']}_{x['Microcredencial']}", axis=1)
+
+    # Drop the original 'CODIGOMICROCREDENCIAL' column if it's no longer needed
+    df.drop(columns=['CODIGOMICROCREDENCIAL'], inplace=True)
 
     # Normalize the department column to lowercase
     if 'Department' in df.columns:
@@ -122,7 +128,7 @@ def load_microcredentials(file_path):
     df = df[cols]
 
     # Display the updated DataFrame
-    print("\nUpdated DataFrame with Nome_UC:")
+    print("\nUpdated DataFrame with NOMEDISCIPLINA:")
     print(df.head())
 
     return df
@@ -201,14 +207,11 @@ def main():
     # Normalize the 'DEPARTMENT' column to uppercase
     uc_data['DEPARTMENT'] = uc_data['DEPARTMENT'].str.upper()
 
-    # Normalize the 'Microcredencial' column to uppercase
-    uc_data['Microcredencial'] = uc_data['Microcredencial'].str.upper()
-
     # Filter out rows that contain "Opção" in the NOMEDISCIPLINA column
     uc_data = uc_data[~uc_data['NOMEDISCIPLINA'].str.contains("OPÇÃO", na=False)]
 
     # Keep only the columns you need after the merge
-    uc_data = uc_data[['CODDISCIPLINACOD', 'NOMEDISCIPLINA', 'DEPARTMENT', 'MSC', 'RAMO', 'CE', 'Microcredencial', 'CODIGOMICROCREDENCIAL', 'Url']]
+    uc_data = uc_data[['CODDISCIPLINACOD', 'NOMEDISCIPLINA', 'DEPARTMENT', 'MSC', 'RAMO', 'CE', 'Microcredencial', 'Url']]
 
     # Remove duplicates only if all columns are the same
     uc_data = uc_data.drop_duplicates()
