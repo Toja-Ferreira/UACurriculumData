@@ -1,6 +1,6 @@
 # Program for Processing Curriculum Data
 
-This repository contains a program that processes curriculum data for multiple study programs, including Master Programs, Continuing Education (CE), and Microcredentials. It also provides a web interface to visualize the data.
+This repository contains a program that processes curriculum data for multiple study programs, including Master Programs (MsC) , Especialization Courses (CE), and Microcredentials (μC). It also provides a web interface to visualize the data.
 
 ## Table of Contents
 
