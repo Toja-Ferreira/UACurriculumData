@@ -534,7 +534,7 @@ with tab3:
                     parts = row['CE'].split('_')
                     program_code = parts[0]
                     program_name = parts[1].upper()
-                    department = msc_courses.loc[msc_courses['CE'] == row['CE'], 'DEPARTMENT'].iloc[0]
+                    department = ce_courses.loc[ce_courses['CE'] == row['CE'], 'DEPARTMENT'].iloc[0]
 
                     st.write(f"- **{program_code} -** {program_name} in **{department}**")
 
@@ -552,7 +552,7 @@ with tab3:
                     parts = row['Microcredencial'].split('_')
                     program_code = parts[0]
                     program_name = parts[1].upper()
-                    department = msc_courses.loc[msc_courses['Microcredencial'] == row['Microcredencial'], 'DEPARTMENT'].iloc[0]
+                    department = micro_courses.loc[micro_courses['Microcredencial'] == row['Microcredencial'], 'DEPARTMENT'].iloc[0]
 
                     st.write(f"- **{program_code} -** {program_name} in **{department}**")
 
