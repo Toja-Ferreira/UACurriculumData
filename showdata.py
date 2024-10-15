@@ -546,7 +546,7 @@ with tab3:
 
             st.markdown(f"### {len(micro_grouped)} Microcredential Programs (μC)")
             with st.expander("μC List"):
-                for index, course in micro_courses.iterrows():
+                for index, row in micro_courses.iterrows():
                     parts = row['Microcredencial'].split('_')
                     program_code = parts[0]
                     program_name = parts[1].upper()
