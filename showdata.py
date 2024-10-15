@@ -496,10 +496,12 @@ with tab3:
         # 1. Master's (MsC) programs
         if selected_discipline_data['MSC'].notna().any():
             msc_courses = selected_discipline_data[['MSC', 'DEPARTMENT', 'RAMO']][selected_discipline_data['MSC'].notna()]
-            # Group by the MsC code (program) and aggregate branches
-            msc_grouped = msc_courses.groupby('MSC')['RAMO'].apply(
-                lambda x: ' - '.join(f"[{str(i).replace('_', ' ').upper()}]" for i in sorted(set(x)) if pd.notna(i))
-            ).reset_index()
+            
+            # Group by the MsC code (program) and aggregate branches and departments
+            msc_grouped = msc_courses.groupby('MSC').agg({
+                'RAMO': lambda x: ' - '.join(f"[{str(i).replace('_', ' ').upper()}]" for i in sorted(set(x)) if pd.notna(i)),
+                'DEPARTMENT': lambda x: '/'.join(sorted(set(x)))  # Join unique departments with '/'
+            }).reset_index()
 
             st.markdown(f"### {len(msc_grouped)} Master Programs (MsC)")
             with st.expander("MsC List"):
@@ -507,26 +509,27 @@ with tab3:
                     parts = row['MSC'].split('_')
                     program_code = parts[0]
                     program_name = parts[1].upper()
-                    department = msc_courses.loc[msc_courses['MSC'] == row['MSC'], 'DEPARTMENT'].iloc[0]
+                    departments = row['DEPARTMENT']  # Concatenated departments
                     branches = row['RAMO']  # Concatenated branches for this program
-                    
+
                     # Only show branches if they exist
-                    if branches:  # If branches are not empty
+                    if branches:
                         branch_list = [branch.strip() for branch in branches.split('-')]
                         branch_count = len(branch_list)  # Count the number of branches
-                        
-                        st.write(f"- **{program_code} -** {program_name} in **{department}**")
+
+                        st.write(f"- **{program_code} -** {program_name} **- {departments}**")
                         st.write(f"**{branch_count} Ramos:** {branches}")
                     else:
-                        st.write(f"- **{program_code} -** {program_name} in **{department}**")  # No branches
+                        st.write(f"- **{program_code} -** {program_name} **- {departments}**")  # No branches
 
         # 2. Continuing Education (CE) programs
         if selected_discipline_data['CE'].notna().any():
             ce_courses = selected_discipline_data[['CE', 'DEPARTMENT']][selected_discipline_data['CE'].notna()]
-            # Group by the CE code (program) and aggregate branches
-            ce_grouped = ce_courses.groupby('CE').apply(
-                lambda x: ', '.join(sorted(set(str(i).replace('_', ' ').upper() for i in x if pd.notna(i))))  # Uppercase and remove underscores
-            ).reset_index()
+
+            # Group by the CE code (program) and aggregate departments
+            ce_grouped = ce_courses.groupby('CE').agg({
+                'DEPARTMENT': lambda x: '/'.join(sorted(set(x)))  # Join unique departments with '/'
+            }).reset_index()
 
             st.markdown(f"### {len(ce_grouped)} Especialization Programs (CE)")
             with st.expander("CE List"):
@@ -534,27 +537,28 @@ with tab3:
                     parts = row['CE'].split('_')
                     program_code = parts[0]
                     program_name = parts[1].upper()
-                    department = ce_courses.loc[ce_courses['CE'] == row['CE'], 'DEPARTMENT'].iloc[0]
+                    departments = row['DEPARTMENT']  # Concatenated departments
 
-                    st.write(f"- **{program_code} -** {program_name} in **{department}**")
+                    st.write(f"- **{program_code} -** {program_name} **- {departments}**")
 
         # 3. Microcredentials
         if selected_discipline_data['Microcredencial'].notna().any():
             micro_courses = selected_discipline_data[['Microcredencial', 'DEPARTMENT']][selected_discipline_data['Microcredencial'].notna()]
-            # Group by the CE code (program) and aggregate branches
-            micro_grouped = micro_courses.groupby('Microcredencial').apply(
-                lambda x: ', '.join(sorted(set(str(i).replace('_', ' ').upper() for i in x if pd.notna(i))))  # Uppercase and remove underscores
-            ).reset_index()
+
+            # Group by the Microcredential code (program) and aggregate departments
+            micro_grouped = micro_courses.groupby('Microcredencial').agg({
+                'DEPARTMENT': lambda x: '/'.join(sorted(set(x)))  # Join unique departments with '/'
+            }).reset_index()
 
             st.markdown(f"### {len(micro_grouped)} Microcredential Programs (μC)")
             with st.expander("μC List"):
-                for index, row in micro_courses.iterrows():
+                for index, row in micro_grouped.iterrows():
                     parts = row['Microcredencial'].split('_')
                     program_code = parts[0]
                     program_name = parts[1].upper()
-                    department = micro_courses.loc[micro_courses['Microcredencial'] == row['Microcredencial'], 'DEPARTMENT'].iloc[0]
+                    departments = row['DEPARTMENT']  # Concatenated departments
 
-                    st.write(f"- **{program_code} -** {program_name} in **{department}**")
+                    st.write(f"- **{program_code} -** {program_name} **- {departments}**")
 
 # Upload Data Tab
 with tab4:
