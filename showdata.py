@@ -45,7 +45,7 @@ with tab1:
     unique_ce_count = st.session_state.uc_data['CE'].nunique()
     unique_ce_disciplines = st.session_state.uc_data[st.session_state.uc_data['CE'].notna()]['CODDISCIPLINACOD'].nunique()
 
-    unique_micro_count = st.session_state.uc_data['Microcredencial'].nunique()  # This is always 1:1, so no need for discipline count
+    unique_micro_count = st.session_state.uc_data['Microcredencial'].nunique()
 
     # Display program counts and disciplines
     st.write(f"### Total Programs and Disciplines Across University")
@@ -495,7 +495,7 @@ with tab3:
 
         # 1. Master's (MsC) programs
         if selected_discipline_data['MSC'].notna().any():
-            msc_courses = selected_discipline_data[selected_discipline_data['MSC'].notna()]
+            msc_courses = selected_discipline_data[['MSC', 'DEPARTMENT', 'RAMO']][selected_discipline_data['MSC'].notna()]
             # Group by the MsC code (program) and aggregate branches
             msc_grouped = msc_courses.groupby('MSC')['RAMO'].apply(
                 lambda x: ' - '.join(f"[{str(i).replace('_', ' ').upper()}]" for i in sorted(set(x)) if pd.notna(i))
@@ -507,6 +507,7 @@ with tab3:
                     parts = row['MSC'].split('_')
                     program_code = parts[0]
                     program_name = parts[1].upper()
+                    department = msc_courses.loc[msc_courses['MSC'] == row['MSC'], 'DEPARTMENT'].iloc[0]
                     branches = row['RAMO']  # Concatenated branches for this program
                     
                     # Only show branches if they exist
@@ -514,14 +515,14 @@ with tab3:
                         branch_list = [branch.strip() for branch in branches.split('-')]
                         branch_count = len(branch_list)  # Count the number of branches
                         
-                        st.write(f"- **{program_code} -** {program_name}")
+                        st.write(f"- **{program_code} -** {program_name} in **{department}**")
                         st.write(f"**{branch_count} Ramos:** {branches}")
                     else:
-                        st.write(f"- **{program_code} -** {program_name}")  # No branches
+                        st.write(f"- **{program_code} -** {program_name} in **{department}**")  # No branches
 
         # 2. Continuing Education (CE) programs
         if selected_discipline_data['CE'].notna().any():
-            ce_courses = selected_discipline_data[selected_discipline_data['CE'].notna()]
+            ce_courses = selected_discipline_data[['CE', 'DEPARTMENT']][selected_discipline_data['CE'].notna()]
             # Group by the CE code (program) and aggregate branches
             ce_grouped = ce_courses.groupby('CE').apply(
                 lambda x: ', '.join(sorted(set(str(i).replace('_', ' ').upper() for i in x if pd.notna(i))))  # Uppercase and remove underscores
@@ -533,12 +534,13 @@ with tab3:
                     parts = row['CE'].split('_')
                     program_code = parts[0]
                     program_name = parts[1].upper()
+                    department = msc_courses.loc[msc_courses['CE'] == row['CE'], 'DEPARTMENT'].iloc[0]
 
-                    st.write(f"- **{program_code} -** {program_name}")
+                    st.write(f"- **{program_code} -** {program_name} in **{department}**")
 
         # 3. Microcredentials
         if selected_discipline_data['Microcredencial'].notna().any():
-            micro_courses = selected_discipline_data[selected_discipline_data['Microcredencial'].notna()]
+            micro_courses = selected_discipline_data[['Microcredencial', 'DEPARTMENT']][selected_discipline_data['Microcredencial'].notna()]
             # Group by the CE code (program) and aggregate branches
             micro_grouped = micro_courses.groupby('Microcredencial').apply(
                 lambda x: ', '.join(sorted(set(str(i).replace('_', ' ').upper() for i in x if pd.notna(i))))  # Uppercase and remove underscores
@@ -550,8 +552,9 @@ with tab3:
                     parts = row['Microcredencial'].split('_')
                     program_code = parts[0]
                     program_name = parts[1].upper()
+                    department = msc_courses.loc[msc_courses['Microcredencial'] == row['Microcredencial'], 'DEPARTMENT'].iloc[0]
 
-                    st.write(f"- **{program_code} -** {program_name}")
+                    st.write(f"- **{program_code} -** {program_name} in **{department}**")
 
 # Upload Data Tab
 with tab4:
