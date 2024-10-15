@@ -540,7 +540,7 @@ with tab3:
         if selected_discipline_data['Microcredencial'].notna().any():
             micro_courses = selected_discipline_data[selected_discipline_data['Microcredencial'].notna()]
             # Group by the CE code (program) and aggregate branches
-            micro_grouped = ce_courses.groupby('Microcredencial').apply(
+            micro_grouped = micro_courses.groupby('Microcredencial').apply(
                 lambda x: ', '.join(sorted(set(str(i).replace('_', ' ').upper() for i in x if pd.notna(i))))  # Uppercase and remove underscores
             ).reset_index()
 
