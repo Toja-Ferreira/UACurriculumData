@@ -32,11 +32,15 @@ def process_branch_files(base_folder_path):
 
                         # Check if the row contains the "Ramo" or "Percurso" identifier
                         if isinstance(first_cell, str) and ("Ramo" in first_cell or "Percurso" in first_cell):
-                            current_branch = first_cell.strip()  # Get the current branch name
-                            branch_name = current_branch.split('-')[-1].strip()  # Extract the name after the dash
+                            current_branch = first_cell.strip()
+
+                            # Extract parts of the branch name to avoid overwriting
+                            branch_name_parts = current_branch.split('-')
+                            branch_name = '_'.join(part.strip() for part in branch_name_parts[1:])  # Use more parts of the name
                             branch_name = sanitize_branch_name(branch_name)  # Sanitize the branch name
                             branch_data[branch_name] = []
-                            has_ramos = True  # We found a Ramo or Percurso
+                            has_ramos = True
+
 
                         # If we're in a branch section, add the row data to that branch
                         elif current_branch is not None:
