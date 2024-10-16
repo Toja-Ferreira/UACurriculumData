@@ -34,13 +34,25 @@ def process_branch_files(base_folder_path):
                         if isinstance(first_cell, str) and ("Ramo" in first_cell or "Percurso" in first_cell):
                             current_branch = first_cell.strip()
 
-                            # Extract parts of the branch name to avoid overwriting
-                            branch_name_parts = current_branch.split('-')
-                            branch_name = '_'.join(part.strip() for part in branch_name_parts[1:])  # Use more parts of the name
-                            branch_name = sanitize_branch_name(branch_name)  # Sanitize the branch name
+                            # If "Ramo", split by dash
+                            if "Ramo" in current_branch:
+                                branch_type = "Ramo"
+                                # Extract parts of the branch name after "Ramo"
+                                branch_name_parts = current_branch.split('-')
+                                branch_name = '_'.join(part.strip() for part in branch_name_parts[1:])  # Use more parts of the name
+
+                            # If "Percurso", handle it as "Percurso (number)"
+                            elif "Percurso" in current_branch:
+                                branch_type = "Percurso"
+                                # Extract just the "Percurso (number)" and use it as the name
+                                branch_name = current_branch.replace("Percurso", "").strip()
+
+                            # Combine the branch type (Ramo or Percurso) with the sanitized name
+                            branch_name = f"{branch_type}_{sanitize_branch_name(branch_name)}"
+
+                            # Initialize branch data
                             branch_data[branch_name] = []
                             has_ramos = True
-
 
                         # If we're in a branch section, add the row data to that branch
                         elif current_branch is not None:
@@ -55,8 +67,8 @@ def process_branch_files(base_folder_path):
                             # Create DataFrame from rows
                             branch_df = pd.DataFrame(rows)
 
-                            # Create new filename
-                            new_file_name = f"{os.path.splitext(file_path)[0]}_Ramo_{branch}.xlsx"
+                            # Create new filename with both Ramo and Percurso considered
+                            new_file_name = f"{os.path.splitext(file_path)[0]}_{branch}.xlsx"
 
                             # Write to Excel without header
                             branch_df.to_excel(new_file_name, index=False, header=False)
