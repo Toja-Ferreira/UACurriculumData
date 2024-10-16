@@ -24,21 +24,30 @@ def load_master_curricular_plans(base_folder_path):
                     df['NOMEDISCIPLINAGENERICA'] = df['NOMEDISCIPLINAGENERICA'].astype(str)
                     df = df[~df['NOMEDISCIPLINAGENERICA'].str.contains("OPÇÃO LIVRE", case=False, na=False)]
 
-                    # Add columns for department, MSC, and Ramo name
+                    # Add columns for department, MSC, and Ramo/Percurso name
                     msc_value = filename[11:-5]  # Get the full filename without extension
 
-                    # Extract the Ramo portion (assuming "Ramo" is indicated as such in the filename)
+                    # Initialize ramo_value as None by default
+                    ramo_value = None
+
+                    # Extract the Ramo or Percurso portion (assuming either "Ramo" or "Percurso" exists in the filename)
                     if 'Ramo' in msc_value:  # Check if "Ramo" is part of the filename
                         ramo_value = msc_value.split('Ramo')[-1].strip()  # Take the part after "Ramo"
                         ramo_value = ramo_value.lstrip('_')  # Remove leading underscore from Ramo value
                         msc_value = msc_value.split('Ramo')[0].strip().rstrip('_')  # Take the part before "Ramo" and remove trailing underscore
+                    elif 'Percurso' in msc_value:  # Check if "Percurso" is part of the filename
+                        percurso_value = msc_value.split('Percurso')[-1].strip()  # Take the part after "Percurso"
+                        percurso_value = percurso_value.lstrip('_')  # Remove leading underscore from Percurso value
+                        ramo_value = f"Percurso_{percurso_value}"  # Combine into Percurso_x format
+                        msc_value = msc_value.split('Percurso')[0].strip().rstrip('_')  # Take the part before "Percurso" and remove trailing underscore
                     else:
-                        ramo_value = None  # Handle cases where there's no "Ramo"
+                        ramo_value = None  # Handle cases where there's no "Ramo" or "Percurso"
 
                     # Assign values to the DataFrame
                     df['DEPARTMENT'] = department
                     df['MSC'] = msc_value  # Assign the cleaned MSC value
-                    df['RAMO'] = ramo_value  # Add the Ramo value
+                    df['RAMO'] = ramo_value  # Add the Ramo or Percurso value
+
 
                     # Move the columns "Department" and "MSC" to the third and fourth positions
                     cols = df.columns.tolist()
