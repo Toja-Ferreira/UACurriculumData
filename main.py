@@ -143,6 +143,41 @@ def load_microcredentials(file_path):
     return df
 
 
+def check_ce_in_msc(uc_data):
+    # Group by MsC, collect all UCs associated with each MsC
+    msc_grouped = uc_data[uc_data['MSC'].notna()].groupby('MSC')['CODDISCIPLINACOD'].apply(set).reset_index()
+
+    # Group by CE, collect all UCs associated with each CE
+    ce_grouped = uc_data[uc_data['CE'].notna()].groupby('CE')['CODDISCIPLINACOD'].apply(set).reset_index()
+
+    # Initialize a list to store results
+    ce_in_msc_results = []
+
+    # Iterate over each CE and check if its UCs are a subset of any MsC's UCs
+    for _, ce_row in ce_grouped.iterrows():
+        ce_code = ce_row['CE']
+        ce_uc_set = ce_row['CODDISCIPLINACOD']
+
+        # Check each MsC to see if the CE's UCs are a subset
+        found_match = False
+        for _, msc_row in msc_grouped.iterrows():
+            msc_code = msc_row['MSC']
+            msc_uc_set = msc_row['CODDISCIPLINACOD']
+
+            if ce_uc_set.issubset(msc_uc_set):
+                # If the CE UCs are a subset, add it to the results
+                ce_in_msc_results.append((ce_code, msc_code))
+                found_match = True
+
+        if not found_match:
+            # If no matching MsC was found, add None to indicate no match
+            ce_in_msc_results.append((ce_code, None))
+
+    # Convert the results into a DataFrame for better visibility
+    ce_in_msc_df = pd.DataFrame(ce_in_msc_results, columns=['CE', 'MsC'])
+    
+    return ce_in_msc_df
+
 def main():
     # ------------------------------- CE processing ------------------------------- #
     # Specify the folder containing the Excel files
@@ -229,6 +264,14 @@ def main():
     output_uc_file = 'UC_all.xlsx'
     uc_data.to_excel(output_uc_file, index=False)
     print(f"\nUC data saved to '{output_uc_file}'")
+
+    # Check if CEs are part of any MsC programs
+    ce_in_msc_df = check_ce_in_msc(uc_data)
+
+    # Save the results to a new Excel file
+    output_file = 'CE_in_MsC.xlsx'
+    ce_in_msc_df.to_excel(output_file, index=False)
+    print(f"\nCE in MsC check results saved to '{output_file}'")
 
 
 if __name__ == "__main__":

@@ -21,6 +21,8 @@ uc_data = pd.read_excel('UC_all.xlsx')
 
 original_data = uc_data.copy()
 
+relationship_data = pd.read_excel('CE_in_MsC.xlsx')
+
 # Initialize uc_data in session state if it doesn't exist
 if 'uc_data' not in st.session_state:
     st.session_state.uc_data = uc_data
@@ -123,6 +125,52 @@ with tab1:
     - **{overlapping_all_three}** disciplines are common across **MsC, CE, and μC**.
     """
     st.write(explanation_text)
+    
+    st.dataframe(relationship_data)
+
+    st.header("CE and MsC Program Relationships")
+    
+    # Create a dictionary to hold MsC to CE mappings
+    msc_to_ce = {}
+
+    # Populate the msc_to_ce dictionary using the split logic
+    for _, row in relationship_data.iterrows():
+        # Check if MsC and CE are not NaN before processing
+        if pd.notna(row['MsC']) and pd.notna(row['CE']):
+            # Split and clean MsC
+            msc_parts = row['MsC'].split('_')
+            msc_code = msc_parts[0].strip()  # Remove any extra spaces
+            msc_name = msc_parts[1].strip().upper()  # Uppercase for uniformity
+
+            # Split and clean CE
+            ce_parts = row['CE'].split('_')
+            ce_code = ce_parts[0].strip()  # Remove any extra spaces
+            ce_name = ce_parts[1].strip().upper()  # Uppercase for uniformity
+            
+            # Add MsC and its associated CE to the dictionary
+            if msc_code not in msc_to_ce:
+                msc_to_ce[msc_code] = {'name': msc_name, 'CEs': []}
+            
+            msc_to_ce[msc_code]['CEs'].append({'code': ce_code, 'name': ce_name})
+
+    # Create the interpretation text
+    total_msc = len(msc_to_ce)
+    total_ce_mappings = sum(len(msc['CEs']) for msc in msc_to_ce.values())
+
+    interpretation_text = f"""
+    - There are **{total_ce_mappings}** Especialization Course (CE) programs associated with **{total_msc}** Master programs (MsC).
+    """
+
+    # Display the interpretation
+    st.write(interpretation_text)
+
+    # Single expander for all MsC and their CE associations
+    with st.expander("View MsC and its Associated CE Programs"):
+        for msc_code, details in msc_to_ce.items():
+            # Create a descriptive sentence for the MsC and its associated CE courses
+            ce_descriptions = ", ".join([f"**CE** (**{ce['code']}** - {ce['name']})" for ce in details['CEs']])
+            statement = f"**MsC** (**{msc_code}** - {details['name']}) is associated with {ce_descriptions}."
+            st.write(statement if ce_descriptions else f"**MsC** (**{msc_code}** - {details['name']}) has no associated CE programs.")
 
 # Department Overview Tab
 with tab2:
