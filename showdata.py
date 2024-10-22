@@ -126,7 +126,7 @@ with tab1:
     """
     st.write(explanation_text)
     
-    st.dataframe(relationship_data)
+    #st.dataframe(relationship_data)
 
     st.header("CE and MsC Program Relationships")
     
@@ -158,7 +158,7 @@ with tab1:
     total_ce_mappings = sum(len(msc['CEs']) for msc in msc_to_ce.values())
 
     interpretation_text = f"""
-    - There are **{total_ce_mappings}** Especialization Course (CE) programs associated with **{total_msc}** Master programs (MsC).
+    - There are **{total_ce_mappings}** Especialization Course (**CE**) programs associated with **{total_msc}** Master programs (**MsC**).
     """
 
     # Display the interpretation
